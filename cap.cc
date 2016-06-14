@@ -39,7 +39,7 @@ void setWindView(const Mat &m){
   boost::mutex::scoped_lock lock(viewMt);
   windView=m;
 }
-boost::lockfree::queue<int> windData(8);
+boost::lockfree::queue<int> windData(16);
 void putWind(int w){
   windData.push(w);
 }
@@ -88,14 +88,19 @@ int main(int argvc,char *argv[]){
   cerr << "start threads"<<endl;
   while(!doEnd){
     Mat tmp;
-    getWindView(tmp);
-    if(windDebug)imshow("Capture",tmp);
-    getLedView(tmp);
-    if(ledDebug)imshow("led",tmp);
+    if(windDebug){
+      getWindView(tmp);
+      imshow("Capture",tmp);
+    }
+    
+    if(ledDebug){
+      getLedView(tmp);
+      imshow("led",tmp);
+    }
     int key=cv::waitKey(1);
     key-='0';
-    if(key<10)putWind(key);
-    usleep(1000*1000/15);
+    if(0<=key && key<10)putWind(key); 
+    usleep(1000*1000/10);
   }
   cerr << "end"<<endl;
   thWind.join();

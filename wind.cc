@@ -35,6 +35,7 @@ void wind(void){
   VideoCapture cap(dev);
   cap.set(CV_CAP_PROP_FRAME_WIDTH, 320/2);
   cap.set(CV_CAP_PROP_FRAME_HEIGHT, 240/2);
+  
   if(!cap.isOpened()){
     cerr << "can not open camera"<<endl;
     return ;
@@ -46,8 +47,9 @@ void wind(void){
   double thresh=0.5;
   int ignoreCount=0;
   while(1) {
-
     cap >> frame;
+    
+    
     for(int i=0;i<sx.size();i++)sx[i]=0;
     for(int i=0;i<sy.size();i++)sy[i]=0;
     for(int y = 0; y < frame.rows; ++y){
@@ -79,9 +81,8 @@ void wind(void){
 	//Put in wind daata when qeue size is enough small
 	
 	double arg=(atan2(diff.y,diff.x)/(M_PI)+1.0)  *8 ;
-	if(windDebug){
-	  cerr <<  (int)arg ;
-	  cerr << diff <<endl;
+	if(1 || windDebug){
+	  cerr <<  (int)arg <<"  " << diff <<endl;
 	}
 	putWind((int)arg);
 	ignoreCount=40;
