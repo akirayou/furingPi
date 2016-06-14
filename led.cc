@@ -1,4 +1,5 @@
 #include<iostream>
+#include<iomanip>
 #include<opencv2/opencv.hpp>//debug view
 #include <stdint.h>
 #include <cmath>
@@ -20,18 +21,51 @@ int ledDebug=0;
 #define GPIO_PIN                                 18
 #define DMA                                      5
 
-#define WIDTH                                    20
-#define HEIGHT                                   (19)
+#define WIDTH                                    (19*3)
+#define HEIGHT                                   5
 #define LED_COUNT                                (WIDTH * HEIGHT+1)
 ws2811_t ledstring;
-static Mat ledView=Mat::zeros(HEIGHT*10,WIDTH*3,CV_8UC3);
+static Mat ledView=Mat::zeros(HEIGHT*3,WIDTH*3,CV_8UC3);
 void getLedView(Mat &m);
 void setLedView(const Mat &m);
 
 
+static int posTr[WIDTH*HEIGHT]={0};
+void initPos(){
+  int x=0,y=0;
+  int xd=1,yd=1;
+  for(int  l=1;l<WIDTH*HEIGHT+1;l++){
+    cerr << x<<","<<y<<endl;
+    posTr[y*WIDTH+x]=l;
+
+    x+=xd;
+    if((l-1)%19==18){
+      xd*=-1;
+      x+=xd;
+      y+=yd;
+      if(y<0 || HEIGHT<=y){
+	yd*=-1;
+	y+=yd;
+	xd*=-1;
+	x+=xd;
+      }
+    }
+  }
+
+  for(y=0;y<HEIGHT;y++){
+      for(x=0;x<WIDTH;x++){
+	cerr <<setw(3)<< posTr[y*WIDTH+x] <<" ";
+      }
+      cerr << endl;
+  }
+  
+  
+}
+
 void matrix_render(Mat img){
   int x, y;
   int c=0;
+  if(posTr[0]==0)initPos();
   for (x = 0; x < WIDTH; x++){
     for (y = 0; y < HEIGHT; y++){
       unsigned char *ip=&(img.at<unsigned char>(y,x*3));
@@ -39,15 +73,13 @@ void matrix_render(Mat img){
 	((uint32_t)(ip[0])<<16)  +//r
 	((uint32_t)(ip[1])<<8)  +//g
 	( uint32_t)(ip[2])  ;//b
-      //printf("%X\t",col);
-      //if y is odd , x is reverse side
-      int xl=x;
-      if(y%2)xl=WIDTH-x-1;
-      ledstring.channel[0].leds[(y * WIDTH) +x] = col;
+
+      
+      ledstring.channel[0].leds[posTr[y*WIDTH+x]] = col;
 
       if(ledDebug){
 	int vx=x*3+1;
-	int vy=y*10+5;
+	int vy=y*3+1;
 	unsigned char *vp=&(ledView.at<unsigned char>(vy,vx*3));
 	vp[0]= 0xff & (col);
 	vp[1]= 0xff & (col>>8);
